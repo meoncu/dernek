@@ -18,25 +18,6 @@
 
   <title>Dernek</title>
   <link rel="manifest" href="manifest.json">
-
-  <!-- Firebase Auth: required for Google Sign-In popup on web -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyCIun0gRQxgtOquKOv-pIsVakLIxz3XxY8",
-      authDomain: "dernek-80ac4.firebaseapp.com",
-      projectId: "dernek-80ac4",
-      storageBucket: "dernek-80ac4.firebasestorage.app",
-      messagingSenderId: "1013133296340",
-      appId: "1:1013133296340:web:caa7812edefdce0b93b141",
-      measurementId: "G-5Y1TJR1LFH"
-    };
-
-    window._firebaseApp = initializeApp(firebaseConfig);
-    window._firebaseAuth = getAuth(window._firebaseApp);
-  </script>
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>
