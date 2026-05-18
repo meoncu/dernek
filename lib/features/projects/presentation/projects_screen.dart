@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/widgets/app_scaffold.dart';
 import '../../../core/widgets/states.dart';
@@ -11,14 +12,17 @@ class ProjectsScreen extends StatelessWidget {
     return AppScaffold(
       title: 'Projeler',
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {},
+        onPressed: () => context.push('/projects/create'),
         icon: const Icon(Icons.add),
         label: const Text('Proje oluştur'),
       ),
       child: EmptyState(
         title: 'Henüz proje yok',
         message: 'Yetim giydirme, su kuyusu veya acil yardım gibi ilk projenizi oluşturun.',
-        action: FilledButton(onPressed: () {}, child: const Text('Yeni proje')),
+        action: FilledButton(
+          onPressed: () => context.push('/projects/create'),
+          child: const Text('Yeni proje'),
+        ),
       ),
     );
   }

@@ -9,6 +9,7 @@ import '../../features/dashboard/presentation/dashboard_screen.dart';
 import '../../features/donations/presentation/donations_screen.dart';
 import '../../features/donors/presentation/donors_screen.dart';
 import '../../features/projects/presentation/projects_screen.dart';
+import '../../features/projects/presentation/project_create_screen.dart';
 import '../../features/reminders/presentation/reminders_screen.dart';
 import '../../features/reports/presentation/reports_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
@@ -46,6 +47,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/projects',
         name: 'projects',
         builder: (_, __) => const ProjectsScreen(),
+        routes: [
+          GoRoute(
+            path: 'create',
+            name: 'project_create',
+            builder: (_, __) => const ProjectCreateScreen(),
+          ),
+        ],
       ),
       GoRoute(
         path: '/donors',
