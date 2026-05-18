@@ -1,0 +1,30 @@
+name: dernek
+description: Mobile-first donation and charity project management system built with Flutter and Firebase.
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: '>=3.4.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cloud_firestore: any
+  firebase_analytics: any
+  firebase_auth: any
+  firebase_core: any
+  firebase_messaging: any
+  firebase_storage: any
+  flutter_riverpod: any
+  go_router: any
+  google_sign_in: any
+  intl: any
+  url_launcher: any
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: any
+
+flutter:
+  uses-material-design: true

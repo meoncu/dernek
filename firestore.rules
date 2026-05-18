@@ -1,0 +1,146 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function roleList() {
+      return signedIn() && request.auth.token.roles is list ? request.auth.token.roles : [];
+    }
+
+    function hasRole(role) {
+      return role in roleList();
+    }
+
+    function isAdmin() {
+      return hasRole('super_admin') || hasRole('admin');
+    }
+
+    function canOperate() {
+      return isAdmin() || hasRole('operator');
+    }
+
+    function isReadonly() {
+      return hasRole('readonly');
+    }
+
+    function tenantIds() {
+      return signedIn() && request.auth.token.tenantIds is list ? request.auth.token.tenantIds : [];
+    }
+
+    function canAccessTenant(tenantId) {
+      return tenantId in tenantIds() || isAdmin();
+    }
+
+    function ownsExisting() {
+      return signedIn() && resource.data.ownerUid == request.auth.uid;
+    }
+
+    function ownsIncoming() {
+      return signedIn() && request.resource.data.ownerUid == request.auth.uid;
+    }
+
+    function canReadDoc() {
+      return signedIn() && canAccessTenant(resource.data.tenantId) && (isAdmin() || ownsExisting());
+    }
+
+    function canCreateDoc() {
+      return signedIn()
+        && !isReadonly()
+        && canAccessTenant(request.resource.data.tenantId)
+        && (isAdmin() || ownsIncoming())
+        && request.resource.data.createdBy == request.auth.uid;
+    }
+
+    function canUpdateDoc() {
+      return signedIn()
+        && !isReadonly()
+        && canAccessTenant(resource.data.tenantId)
+        && (isAdmin() || canOperate() || ownsExisting())
+        && request.resource.data.tenantId == resource.data.tenantId
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && request.resource.data.updatedBy == request.auth.uid;
+    }
+
+    match /users/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+      allow create: if signedIn() && request.auth.uid == uid && request.resource.data.email == request.auth.token.email;
+      allow update: if signedIn() && (request.auth.uid == uid || isAdmin())
+        && (!('roles' in request.resource.data.diff(resource.data).changedKeys()) || isAdmin());
+      allow delete: if false;
+    }
+
+    match /projects/{projectId} {
+      allow read: if canReadDoc();
+      allow create: if canCreateDoc();
+      allow update: if canUpdateDoc()
+        && request.resource.data.collectedBudget == resource.data.collectedBudget;
+      allow delete: if isAdmin();
+    }
+
+    match /donors/{donorId} {
+      allow read: if canReadDoc();
+      allow create: if canCreateDoc();
+      allow update: if canUpdateDoc();
+      allow delete: if isAdmin();
+    }
+
+    match /donations/{donationId} {
+      allow read: if canReadDoc();
+      allow create: if canCreateDoc();
+      allow update: if canUpdateDoc()
+        && request.resource.data.projectId == resource.data.projectId
+        && request.resource.data.donorId == resource.data.donorId;
+      allow delete: if isAdmin();
+    }
+
+    match /payment_promises/{promiseId} {
+      allow read: if canReadDoc();
+      allow create: if canCreateDoc();
+      allow update: if canUpdateDoc();
+      allow delete: if isAdmin();
+    }
+
+    match /reminders/{reminderId} {
+      allow read: if canReadDoc();
+      allow create: if canCreateDoc();
+      allow update: if canUpdateDoc();
+      allow delete: if isAdmin();
+    }
+
+    match /notifications/{notificationId} {
+      allow read, update: if signedIn() && (resource.data.userUid == request.auth.uid || isAdmin());
+      allow create: if false;
+      allow delete: if isAdmin();
+    }
+
+    match /whatsapp_templates/{templateId} {
+      allow read: if canReadDoc();
+      allow create: if canCreateDoc();
+      allow update: if canUpdateDoc();
+      allow delete: if isAdmin();
+    }
+
+    match /project_reports/{reportId} {
+      allow read: if canReadDoc();
+      allow create: if canCreateDoc();
+      allow update: if canUpdateDoc();
+      allow delete: if isAdmin();
+    }
+
+    match /settings/{settingId} {
+      allow read: if signedIn() && canAccessTenant(resource.data.tenantId);
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /audit_logs/{logId} {
+      allow read: if isAdmin();
+      allow create, update, delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
