@@ -1,16 +1,21 @@
-import { initializeApp } from 'firebase-admin/app';
+import { initializeApp, getAuth } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { getMessaging } from 'firebase-admin/messaging';
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { onDocumentWritten } from 'firebase-functions/v2/firestore';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
+import { onUserCreated } from 'firebase-functions/v2/auth';
 
 initializeApp();
 
 const db = getFirestore();
 const messaging = getMessaging();
+const auth = getAuth();
 
 const adminRoles = new Set(['super_admin', 'admin']);
+
+// Super admin email from README - first user gets this role
+const SUPER_ADMIN_EMAIL = 'meoncu@gmail.com';
 
 function rolesFromToken(token: Record<string, unknown> | undefined): string[] {
   const roles = token?.roles;
@@ -22,6 +27,51 @@ function assertAdmin(token: Record<string, unknown> | undefined): void {
     throw new HttpsError('permission-denied', 'Admin role is required.');
   }
 }
+
+// Bootstrap user document and custom claims on user creation
+export const onUserCreatedHandler = onUserCreated(async (event) => {
+  const user = event.data;
+  if (!user) return;
+
+  const email = user.email;
+  const uid = user.uid;
+
+  // Determine initial roles
+  let roles: string[] = ['user'];
+  let tenantIds: string[] = ['default'];
+
+  if (email === SUPER_ADMIN_EMAIL) {
+    roles = ['super_admin'];
+  }
+
+  // Set custom claims
+  try {
+    await auth.setCustomUserClaims(uid, { roles, tenantIds });
+  } catch (error) {
+    console.error('Failed to set custom claims:', error);
+  }
+
+  // Create user document in Firestore
+  await db.collection('users').doc(uid).set({
+    email,
+    displayName: user.displayName ?? null,
+    photoURL: user.photoURL ?? null,
+    roles,
+    tenantIds,
+    createdAt: FieldValue.serverTimestamp(),
+    updatedAt: FieldValue.serverTimestamp(),
+  });
+
+  // Audit log
+  await db.collection('audit_logs').add({
+    tenantId: 'default',
+    action: 'user.created',
+    actorUid: uid,
+    targetUid: uid,
+    metadata: { email, roles, tenantIds },
+    createdAt: FieldValue.serverTimestamp(),
+  });
+});
 
 export const startImpersonation = onCall(async (request) => {
   if (!request.auth) {
@@ -68,6 +118,16 @@ export const onDonationWrite = onDocumentWritten('donations/{donationId}', async
     collectedBudget: FieldValue.increment(delta),
     updatedAt: FieldValue.serverTimestamp(),
     updatedBy: 'system:onDonationWrite',
+  });
+
+  // Audit log for budget change
+  await db.collection('audit_logs').add({
+    tenantId: after?.tenantId ?? before?.tenantId ?? 'default',
+    action: 'project.budget.updated',
+    actorUid: after?.updatedBy ?? before?.updatedBy ?? 'system',
+    projectId,
+    metadata: { delta, beforeAmount, afterAmount },
+    createdAt: FieldValue.serverTimestamp(),
   });
 });
 

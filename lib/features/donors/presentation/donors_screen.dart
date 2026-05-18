@@ -32,7 +32,7 @@ class _MissingPhoneBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      color: AppColors.critical.withValues(alpha: 0.08),
+      color: AppColors.critical.withOpacity(0.08),
       child: const ListTile(
         leading: Icon(Icons.warning_amber, color: AppColors.critical),
         title: Text('Eksik iletişim bilgileri'),
