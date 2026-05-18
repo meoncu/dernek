@@ -1,4 +1,4 @@
-import '../../core/security/rbac.dart';
+import '../../../core/security/rbac.dart';
 
 class AppUser {
   const AppUser({
