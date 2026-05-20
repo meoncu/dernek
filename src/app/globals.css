@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  background:
+    radial-gradient(circle at top left, rgba(16, 185, 129, 0.08), transparent 40%),
+    radial-gradient(circle at 85% 15%, rgba(20, 184, 166, 0.07), transparent 35%),
+    radial-gradient(circle at 50% 80%, rgba(245, 158, 11, 0.05), transparent 40%),
+    #f0fdf4;
+}
+
+.dark body {
+  background:
+    radial-gradient(circle at top left, rgba(16, 185, 129, 0.15), transparent 38%),
+    radial-gradient(circle at 85% 15%, rgba(20, 184, 166, 0.12), transparent 32%),
+    #071a0f;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #d1fae5;
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #6ee7b7;
+}
